@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-search.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
+        <link rel="stylesheet" href="css/leaflet-control-geocoder.Geocoder.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-control-geocoder.Geocoder.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet-search.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/lab1_1.js"></script>
+        <script src="data/building_2.js"></script>
+        <script src="data/highway_3.js"></script>
+        <script src="data/waterway_4.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[55.71277445453901,76.82307215756826],[55.723191898774964,76.85996741919774]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_OSMStandard_0');
+        map.getPane('pane_OSMStandard_0').style.zIndex = 400;
+        var layer_OSMStandard_0 = L.tileLayer('http://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OSMStandard_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OSMStandard_0;
+        map.addLayer(layer_OSMStandard_0);
+        function pop_lab1_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(String(feature.properties['fid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['name'] !== null ? autolinker.link(String(feature.properties['name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_lab1_1_0() {
+            return {
+                pane: 'pane_lab1_1',
+                opacity: 1,
+                color: 'rgba(255,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(133,182,111,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_lab1_1');
+        map.getPane('pane_lab1_1').style.zIndex = 401;
+        map.getPane('pane_lab1_1').style['mix-blend-mode'] = 'normal';
+        var layer_lab1_1 = new L.geoJson(json_lab1_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_lab1_1',
+            layerName: 'layer_lab1_1',
+            pane: 'pane_lab1_1',
+            onEachFeature: pop_lab1_1,
+            style: style_lab1_1_0,
+        });
+        bounds_group.addLayer(layer_lab1_1);
+        map.addLayer(layer_lab1_1);
+        function pop_building_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(String(feature.properties['fid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['full_id'] !== null ? autolinker.link(String(feature.properties['full_id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_id'] !== null ? autolinker.link(String(feature.properties['osm_id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_type'] !== null ? autolinker.link(String(feature.properties['osm_type']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['building'] !== null ? autolinker.link(String(feature.properties['building']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr:street'] !== null ? autolinker.link(String(feature.properties['addr:street']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr:housenumber'] !== null ? autolinker.link(String(feature.properties['addr:housenumber']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['addr:city'] !== null ? autolinker.link(String(feature.properties['addr:city']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Address'] !== null ? autolinker.link(String(feature.properties['Address']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_building_2_0() {
+            return {
+                pane: 'pane_building_2',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,113,72,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_building_2');
+        map.getPane('pane_building_2').style.zIndex = 402;
+        map.getPane('pane_building_2').style['mix-blend-mode'] = 'normal';
+        var layer_building_2 = new L.geoJson(json_building_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_building_2',
+            layerName: 'layer_building_2',
+            pane: 'pane_building_2',
+            onEachFeature: pop_building_2,
+            style: style_building_2_0,
+        });
+        bounds_group.addLayer(layer_building_2);
+        map.addLayer(layer_building_2);
+        function pop_highway_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['fid'] !== null ? autolinker.link(String(feature.properties['fid']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['full_id'] !== null ? autolinker.link(String(feature.properties['full_id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_id'] !== null ? autolinker.link(String(feature.properties['osm_id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['osm_type'] !== null ? autolinker.link(String(feature.properties['osm_type']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['highway'] !== null ? autolinker.link(String(feature.properties['highway']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['name'] !== null ? autolinker.link(String(feature.properties['name']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['layer'] !== null ? autolinker.link(String(feature.properties['layer']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['bridge'] !== null ? autolinker.link(String(feature.properties['bridge']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ref'] !== null ? autolinker.link(String(feature.properties['ref']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_highway_3_0() {
+            return {
+                pane: 'pane_highway_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_highway_3');
+        map.getPane('pane_highway_3').style.zIndex = 403;
+        map.getPane('pane_highway_3').style['mix-blend-mode'] = 'normal';
+        var layer_highway_3 = new L.geoJson(json_highway_3, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_highway_3',
+            layerName: 'layer_highway_3',
+            pane: 'pane_highway_3',
+            onEachFeature: pop_highway_3,
+            style: style_highway_3_0,
+        });
+        bounds_group.addLayer(layer_highway_3);
+        map.addLayer(layer_highway_3);
+        function pop_waterway_4(feature, layer) {
+        }
+
+        function style_waterway_4_0() {
+            return {
+                pane: 'pane_waterway_4',
+                opacity: 1,
+                color: 'rgba(208,174,214,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        function style_waterway_4_1() {
+            return {
+                pane: 'pane_waterway_4',
+                interactive: true,
+            }
+        }
+        function style_waterway_4_2() {
+            return {
+                pane: 'pane_waterway_4',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_waterway_4');
+        map.getPane('pane_waterway_4').style.zIndex = 404;
+        map.getPane('pane_waterway_4').style['mix-blend-mode'] = 'normal';
+        var layer_waterway_4 = new L.geoJson.multiStyle(json_waterway_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_waterway_4',
+            layerName: 'layer_waterway_4',
+            pane: 'pane_waterway_4',
+            onEachFeature: pop_waterway_4,
+            styles: [style_waterway_4_0,style_waterway_4_1,style_waterway_4_2,]
+        });
+        bounds_group.addLayer(layer_waterway_4);
+        map.addLayer(layer_waterway_4);
+        var osmGeocoder = new L.Control.Geocoder({
+            collapsed: true,
+            position: 'topleft',
+            text: 'Search',
+            title: 'Testing'
+        }).addTo(map);
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .className += ' fa fa-search';
+        document.getElementsByClassName('leaflet-control-geocoder-icon')[0]
+        .title += 'Search for a place';
+        setBounds();
+        map.addControl(new L.Control.Search({
+            layer: layer_building_2,
+            initial: false,
+            hideMarkerOnCollapse: true,
+            propertyName: 'Address'}));
+        document.getElementsByClassName('search-button')[0].className +=
+         ' fa fa-binoculars';
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"layer": "str","full_id": "str","highway": "str","Address": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_layer = document.createElement('div');
+            div_layer.id = "div_layer";
+            div_layer.className= "filterselect";
+            document.getElementById("menu").appendChild(div_layer);
+            sel_layer = document.createElement('select');
+            sel_layer.multiple = true;
+            sel_layer.size = 2;
+            sel_layer.id = "sel_layer";
+            var layer_options_str = "<option value='' unselected></option>";
+            sel_layer.onchange = function(){filterFunc()};
+            layer_options_str  += '<option value="NULL">NULL</option>';
+            layer_options_str  += '<option value="1">1</option>';
+            sel_layer.innerHTML = layer_options_str;
+            div_layer.appendChild(sel_layer);
+            var lab_layer = document.createElement('div');
+            lab_layer.innerHTML = 'layer';
+            lab_layer.className = 'filterlabel';
+            div_layer.appendChild(lab_layer);
+            var reset_layer = document.createElement('div');
+            reset_layer.innerHTML = 'clear filter';
+            reset_layer.className = 'filterlabel';
+            reset_layer.onclick = function() {
+                var options = document.getElementById("sel_layer").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_layer.appendChild(reset_layer);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_full_id = document.createElement('div');
+            div_full_id.id = "div_full_id";
+            div_full_id.className= "filterselect";
+            document.getElementById("menu").appendChild(div_full_id);
+            sel_full_id = document.createElement('select');
+            sel_full_id.multiple = true;
+            sel_full_id.size = 10;
+            sel_full_id.id = "sel_full_id";
+            var full_id_options_str = "<option value='' unselected></option>";
+            sel_full_id.onchange = function(){filterFunc()};
+            full_id_options_str  += '<option value="w196514453">w196514453</option>';
+            full_id_options_str  += '<option value="w196514455">w196514455</option>';
+            full_id_options_str  += '<option value="w196514458">w196514458</option>';
+            full_id_options_str  += '<option value="w196514460">w196514460</option>';
+            full_id_options_str  += '<option value="w196514461">w196514461</option>';
+            full_id_options_str  += '<option value="w196514464">w196514464</option>';
+            full_id_options_str  += '<option value="w196514466">w196514466</option>';
+            full_id_options_str  += '<option value="w196514468">w196514468</option>';
+            full_id_options_str  += '<option value="w196514469">w196514469</option>';
+            full_id_options_str  += '<option value="w196514470">w196514470</option>';
+            full_id_options_str  += '<option value="w196522678">w196522678</option>';
+            full_id_options_str  += '<option value="w196522679">w196522679</option>';
+            full_id_options_str  += '<option value="w196522680">w196522680</option>';
+            full_id_options_str  += '<option value="w196522681">w196522681</option>';
+            full_id_options_str  += '<option value="w196522682">w196522682</option>';
+            full_id_options_str  += '<option value="w196522683">w196522683</option>';
+            full_id_options_str  += '<option value="w196522684">w196522684</option>';
+            full_id_options_str  += '<option value="w196522685">w196522685</option>';
+            full_id_options_str  += '<option value="w196522686">w196522686</option>';
+            full_id_options_str  += '<option value="w196522687">w196522687</option>';
+            full_id_options_str  += '<option value="w196522688">w196522688</option>';
+            full_id_options_str  += '<option value="w196522689">w196522689</option>';
+            full_id_options_str  += '<option value="w196522690">w196522690</option>';
+            full_id_options_str  += '<option value="w196522691">w196522691</option>';
+            full_id_options_str  += '<option value="w196522692">w196522692</option>';
+            full_id_options_str  += '<option value="w196522693">w196522693</option>';
+            full_id_options_str  += '<option value="w196522694">w196522694</option>';
+            full_id_options_str  += '<option value="w196522695">w196522695</option>';
+            full_id_options_str  += '<option value="w196522696">w196522696</option>';
+            full_id_options_str  += '<option value="w196522697">w196522697</option>';
+            full_id_options_str  += '<option value="w196522698">w196522698</option>';
+            full_id_options_str  += '<option value="w196522699">w196522699</option>';
+            full_id_options_str  += '<option value="w196522700">w196522700</option>';
+            full_id_options_str  += '<option value="w196522701">w196522701</option>';
+            full_id_options_str  += '<option value="w196522702">w196522702</option>';
+            full_id_options_str  += '<option value="w196522703">w196522703</option>';
+            full_id_options_str  += '<option value="w196522704">w196522704</option>';
+            full_id_options_str  += '<option value="w196522705">w196522705</option>';
+            full_id_options_str  += '<option value="w196522706">w196522706</option>';
+            full_id_options_str  += '<option value="w196522707">w196522707</option>';
+            full_id_options_str  += '<option value="w196522708">w196522708</option>';
+            full_id_options_str  += '<option value="w196522709">w196522709</option>';
+            full_id_options_str  += '<option value="w196522710">w196522710</option>';
+            full_id_options_str  += '<option value="w196522711">w196522711</option>';
+            full_id_options_str  += '<option value="w196522712">w196522712</option>';
+            full_id_options_str  += '<option value="w196522713">w196522713</option>';
+            full_id_options_str  += '<option value="w196522714">w196522714</option>';
+            full_id_options_str  += '<option value="w196522715">w196522715</option>';
+            full_id_options_str  += '<option value="w196522716">w196522716</option>';
+            full_id_options_str  += '<option value="w196522717">w196522717</option>';
+            full_id_options_str  += '<option value="w196522718">w196522718</option>';
+            full_id_options_str  += '<option value="w196522719">w196522719</option>';
+            full_id_options_str  += '<option value="w196522720">w196522720</option>';
+            full_id_options_str  += '<option value="w196522721">w196522721</option>';
+            full_id_options_str  += '<option value="w196522722">w196522722</option>';
+            full_id_options_str  += '<option value="w196522723">w196522723</option>';
+            full_id_options_str  += '<option value="w196522724">w196522724</option>';
+            full_id_options_str  += '<option value="w196522725">w196522725</option>';
+            full_id_options_str  += '<option value="w196522726">w196522726</option>';
+            full_id_options_str  += '<option value="w196522727">w196522727</option>';
+            full_id_options_str  += '<option value="w196522728">w196522728</option>';
+            full_id_options_str  += '<option value="w196522729">w196522729</option>';
+            full_id_options_str  += '<option value="w196522730">w196522730</option>';
+            full_id_options_str  += '<option value="w196522731">w196522731</option>';
+            full_id_options_str  += '<option value="w196522732">w196522732</option>';
+            full_id_options_str  += '<option value="w196522733">w196522733</option>';
+            full_id_options_str  += '<option value="w196522734">w196522734</option>';
+            full_id_options_str  += '<option value="w196522735">w196522735</option>';
+            full_id_options_str  += '<option value="w196522736">w196522736</option>';
+            full_id_options_str  += '<option value="w196522737">w196522737</option>';
+            full_id_options_str  += '<option value="w196522738">w196522738</option>';
+            full_id_options_str  += '<option value="w196522739">w196522739</option>';
+            full_id_options_str  += '<option value="w196522741">w196522741</option>';
+            full_id_options_str  += '<option value="w196522742">w196522742</option>';
+            full_id_options_str  += '<option value="w196522743">w196522743</option>';
+            full_id_options_str  += '<option value="w196522744">w196522744</option>';
+            full_id_options_str  += '<option value="w196522745">w196522745</option>';
+            full_id_options_str  += '<option value="w196522746">w196522746</option>';
+            full_id_options_str  += '<option value="w196522747">w196522747</option>';
+            full_id_options_str  += '<option value="w196522748">w196522748</option>';
+            full_id_options_str  += '<option value="w196522749">w196522749</option>';
+            full_id_options_str  += '<option value="w196522750">w196522750</option>';
+            full_id_options_str  += '<option value="w196522751">w196522751</option>';
+            full_id_options_str  += '<option value="w196522752">w196522752</option>';
+            full_id_options_str  += '<option value="w196522753">w196522753</option>';
+            full_id_options_str  += '<option value="w196522754">w196522754</option>';
+            full_id_options_str  += '<option value="w196522755">w196522755</option>';
+            full_id_options_str  += '<option value="w196522756">w196522756</option>';
+            full_id_options_str  += '<option value="w196522757">w196522757</option>';
+            full_id_options_str  += '<option value="w196522758">w196522758</option>';
+            full_id_options_str  += '<option value="w196522759">w196522759</option>';
+            full_id_options_str  += '<option value="w196522760">w196522760</option>';
+            full_id_options_str  += '<option value="w196522761">w196522761</option>';
+            full_id_options_str  += '<option value="w196522762">w196522762</option>';
+            full_id_options_str  += '<option value="w196522763">w196522763</option>';
+            full_id_options_str  += '<option value="w196522764">w196522764</option>';
+            full_id_options_str  += '<option value="w196522765">w196522765</option>';
+            full_id_options_str  += '<option value="w196522766">w196522766</option>';
+            full_id_options_str  += '<option value="w196522767">w196522767</option>';
+            full_id_options_str  += '<option value="w196522768">w196522768</option>';
+            full_id_options_str  += '<option value="w196522769">w196522769</option>';
+            full_id_options_str  += '<option value="w196522770">w196522770</option>';
+            full_id_options_str  += '<option value="w196522771">w196522771</option>';
+            full_id_options_str  += '<option value="w196522772">w196522772</option>';
+            full_id_options_str  += '<option value="w196522773">w196522773</option>';
+            full_id_options_str  += '<option value="w196522774">w196522774</option>';
+            full_id_options_str  += '<option value="w196522775">w196522775</option>';
+            full_id_options_str  += '<option value="w196522776">w196522776</option>';
+            full_id_options_str  += '<option value="w196522777">w196522777</option>';
+            full_id_options_str  += '<option value="w196522778">w196522778</option>';
+            full_id_options_str  += '<option value="w196522779">w196522779</option>';
+            full_id_options_str  += '<option value="w196522780">w196522780</option>';
+            full_id_options_str  += '<option value="w196522781">w196522781</option>';
+            full_id_options_str  += '<option value="w196522782">w196522782</option>';
+            full_id_options_str  += '<option value="w196522783">w196522783</option>';
+            full_id_options_str  += '<option value="w196522784">w196522784</option>';
+            full_id_options_str  += '<option value="w196522785">w196522785</option>';
+            full_id_options_str  += '<option value="w196522786">w196522786</option>';
+            full_id_options_str  += '<option value="w196522787">w196522787</option>';
+            full_id_options_str  += '<option value="w196522788">w196522788</option>';
+            full_id_options_str  += '<option value="w196522789">w196522789</option>';
+            full_id_options_str  += '<option value="w196522790">w196522790</option>';
+            full_id_options_str  += '<option value="w196522792">w196522792</option>';
+            full_id_options_str  += '<option value="w196522793">w196522793</option>';
+            full_id_options_str  += '<option value="w196522794">w196522794</option>';
+            full_id_options_str  += '<option value="w196522795">w196522795</option>';
+            full_id_options_str  += '<option value="w196522796">w196522796</option>';
+            full_id_options_str  += '<option value="w196522797">w196522797</option>';
+            full_id_options_str  += '<option value="w196522798">w196522798</option>';
+            full_id_options_str  += '<option value="w196522799">w196522799</option>';
+            full_id_options_str  += '<option value="w196522800">w196522800</option>';
+            full_id_options_str  += '<option value="w196522801">w196522801</option>';
+            full_id_options_str  += '<option value="w196522802">w196522802</option>';
+            full_id_options_str  += '<option value="w196522803">w196522803</option>';
+            full_id_options_str  += '<option value="w196522804">w196522804</option>';
+            full_id_options_str  += '<option value="w196522805">w196522805</option>';
+            full_id_options_str  += '<option value="w196522806">w196522806</option>';
+            full_id_options_str  += '<option value="w196522807">w196522807</option>';
+            full_id_options_str  += '<option value="w196522808">w196522808</option>';
+            full_id_options_str  += '<option value="w196522809">w196522809</option>';
+            full_id_options_str  += '<option value="w196522810">w196522810</option>';
+            full_id_options_str  += '<option value="w196522811">w196522811</option>';
+            full_id_options_str  += '<option value="w196522812">w196522812</option>';
+            full_id_options_str  += '<option value="w196522813">w196522813</option>';
+            full_id_options_str  += '<option value="w196522814">w196522814</option>';
+            full_id_options_str  += '<option value="w196522816">w196522816</option>';
+            full_id_options_str  += '<option value="w82256431">w82256431</option>';
+            full_id_options_str  += '<option value="w82257846">w82257846</option>';
+            full_id_options_str  += '<option value="w82258576">w82258576</option>';
+            full_id_options_str  += '<option value="w82258608">w82258608</option>';
+            full_id_options_str  += '<option value="w82258610">w82258610</option>';
+            full_id_options_str  += '<option value="w82258619">w82258619</option>';
+            full_id_options_str  += '<option value="w82258621">w82258621</option>';
+            full_id_options_str  += '<option value="w82379306">w82379306</option>';
+            sel_full_id.innerHTML = full_id_options_str;
+            div_full_id.appendChild(sel_full_id);
+            var lab_full_id = document.createElement('div');
+            lab_full_id.innerHTML = 'full_id';
+            lab_full_id.className = 'filterlabel';
+            div_full_id.appendChild(lab_full_id);
+            var reset_full_id = document.createElement('div');
+            reset_full_id.innerHTML = 'clear filter';
+            reset_full_id.className = 'filterlabel';
+            reset_full_id.onclick = function() {
+                var options = document.getElementById("sel_full_id").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_full_id.appendChild(reset_full_id);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_highway = document.createElement('div');
+            div_highway.id = "div_highway";
+            div_highway.className= "filterselect";
+            document.getElementById("menu").appendChild(div_highway);
+            sel_highway = document.createElement('select');
+            sel_highway.multiple = true;
+            sel_highway.size = 4;
+            sel_highway.id = "sel_highway";
+            var highway_options_str = "<option value='' unselected></option>";
+            sel_highway.onchange = function(){filterFunc()};
+            highway_options_str  += '<option value="residential">residential</option>';
+            highway_options_str  += '<option value="secondary">secondary</option>';
+            highway_options_str  += '<option value="tertiary">tertiary</option>';
+            highway_options_str  += '<option value="unclassified">unclassified</option>';
+            sel_highway.innerHTML = highway_options_str;
+            div_highway.appendChild(sel_highway);
+            var lab_highway = document.createElement('div');
+            lab_highway.innerHTML = 'highway';
+            lab_highway.className = 'filterlabel';
+            div_highway.appendChild(lab_highway);
+            var reset_highway = document.createElement('div');
+            reset_highway.innerHTML = 'clear filter';
+            reset_highway.className = 'filterlabel';
+            reset_highway.onclick = function() {
+                var options = document.getElementById("sel_highway").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_highway.appendChild(reset_highway);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_Address = document.createElement('div');
+            div_Address.id = "div_Address";
+            div_Address.className= "filterselect";
+            document.getElementById("menu").appendChild(div_Address);
+            sel_Address = document.createElement('select');
+            sel_Address.multiple = true;
+            sel_Address.size = 3;
+            sel_Address.id = "sel_Address";
+            var Address_options_str = "<option value='' unselected></option>";
+            sel_Address.onchange = function(){filterFunc()};
+            Address_options_str  += '<option value=" "> </option>';
+            Address_options_str  += '<option value="Колхозная улица 1">Колхозная улица 1</option>';
+            Address_options_str  += '<option value="улица Кирова 3">улица Кирова 3</option>';
+            sel_Address.innerHTML = Address_options_str;
+            div_Address.appendChild(sel_Address);
+            var lab_Address = document.createElement('div');
+            lab_Address.innerHTML = 'Address';
+            lab_Address.className = 'filterlabel';
+            div_Address.appendChild(lab_Address);
+            var reset_Address = document.createElement('div');
+            reset_Address.innerHTML = 'clear filter';
+            reset_Address.className = 'filterlabel';
+            reset_Address.onclick = function() {
+                var options = document.getElementById("sel_Address").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_Address.appendChild(reset_Address);
+        </script>
+    </body>
+</html>
